@@ -1,0 +1,46 @@
+#Importing the libraries
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+#Importing the dataset
+dataset = pd.read_csv('Ads_CTR_Optimisation.csv')
+Implementing UCB
+# 為了能用開根號
+import math
+# 10000筆資料，這個參數可以調整，有趣的是10000筆下ad4都是被點擊最多次的，而在N=500下則變成ad7被點最多次，代表N的次數不夠，演算法無法辨別出來正確被點最多次的ad
+N = 10000
+# 10種ads
+d = 10
+ads_selected = []
+numbers_of_selections = [0] * d
+sums_of_rewards = [0] * d
+total_reward = 0
+for n in range(0, N):
+  ad = 0
+  max_upper_bound = 0
+  #以下是Step2
+  for i in range(0, d):
+    if (numbers_of_selections[i] > 0):
+      average_reward = sums_of_rewards[i] / numbers_of_selections[i]
+      # math.log()中要+1是因為n的迴圈從0開始，如果取log0會沒有意義
+      delta_i = math.sqrt(3/2 * math.log(n + 1) / numbers_of_selections[i])
+      upper_bound = average_reward + delta_i
+	   #以下開始Step3
+    else:
+        #這裡是無限的意思，算是一個小技巧，讓ad能夠被選擇(??
+        upper_bound = 1e400
+    if (upper_bound > max_upper_bound):
+        max_upper_bound = upper_bound
+        ad = i
+  ads_selected.append(ad)
+  numbers_of_selections[ad] += 1
+  #這邊用dataset代表資料集中各種ad有出現1的row會被各自的ad所計算總合
+  reward = dataset.values[n, ad]
+  sums_of_rewards[ad] += reward
+  total_reward += reward
+#Visualising the results
+plt.hist(ads_selected)
+plt.title('Histogram of ads selections')
+plt.xlabel('Ads')
+plt.ylabel('Number of times each ad was selected')
+plt.show()
